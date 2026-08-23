@@ -186,11 +186,19 @@ def plot_interactive_chart(df, ticker_name, entry, tp, cl):
     fig.add_trace(go.Scatter(x=df_plot.index, y=df_plot['Low20'], mode='lines', name='Low20 (Support)', line=dict(color='purple', width=1, dash='dash')))
     
     # Add Entry, TP, CL horizontal lines
-    fig.add_hline(y=entry, line_dash="solid", line_color="blue", annotation_text=f"Entry: {entry:.2f}")
-    fig.add_hline(y=tp, line_dash="solid", line_color="green", annotation_text=f"TP: {tp:.2f}")
-    fig.add_hline(y=cl, line_dash="solid", line_color="red", annotation_text=f"CL: {cl:.2f}")
+    fig.add_hline(y=entry, line_dash="solid", line_color="blue", annotation_text=f"Entry: {entry:.2f}", annotation_position="top right")
+    fig.add_hline(y=tp, line_dash="solid", line_color="green", annotation_text=f"TP: {tp:.2f}", annotation_position="top right")
+    fig.add_hline(y=cl, line_dash="solid", line_color="red", annotation_text=f"CL: {cl:.2f}", annotation_position="bottom right")
     
-    fig.update_layout(title=f"Chart for {ticker_name}", xaxis_rangeslider_visible=False, template='plotly_white', margin=dict(t=40, b=40, l=40, r=40), height=400)
+    fig.update_layout(
+        title=dict(text=f"Chart for {ticker_name}", font=dict(size=14)),
+        xaxis_rangeslider_visible=False,
+        template='plotly_white',
+        margin=dict(t=60, b=10, l=10, r=50), # Tighter margins for mobile screens
+        height=350, # Slightly shorter to fit on iPhone screen without hiding the app
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10)), # Horizontal legend on top
+        dragmode='pan' # Pan is much more mobile friendly than box select
+    )
     return fig
 
 def load_portfolio():
@@ -267,7 +275,7 @@ with tab1:
             st.markdown("### 📊 Interactive Charts")
             for stock, (df, entry, tp, cl) in charts_data.items():
                 with st.expander(f"View Chart: {stock}"):
-                    st.plotly_chart(plot_interactive_chart(df, stock, entry, tp, cl), use_container_width=True)
+                    st.plotly_chart(plot_interactive_chart(df, stock, entry, tp, cl), use_container_width=True, config={'displayModeBar': False, 'scrollZoom': True})
         else:
             st.info("No BUY or WATCH signals found today. The market might be weak or overextended.")
 
@@ -330,6 +338,6 @@ with tab2:
             st.markdown("### 📊 Interactive Charts")
             for stock, (df, entry, tp, cl) in charts_data.items():
                 with st.expander(f"View Chart: {stock}"):
-                    st.plotly_chart(plot_interactive_chart(df, stock, entry, tp, cl), use_container_width=True)
+                    st.plotly_chart(plot_interactive_chart(df, stock, entry, tp, cl), use_container_width=True, config={'displayModeBar': False, 'scrollZoom': True})
         else:
             st.info("No results found.")
