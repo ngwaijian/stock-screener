@@ -3,54 +3,81 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import requests
+import json
+import os
+import plotly.graph_objects as go
 from datetime import datetime, timedelta
+
+st.set_page_config(page_title="Stock Screener (Jack & Turtle)", layout="wide")
+st.title("📈 Stock Screener: Jack Investment & Turtle Trading")
+
+with st.expander("📚 App Tutorials & Strategy Explanations (Click to expand)"):
+    st.markdown("""
+    ### 1. How to use this App
+    - **Discovery Scanner:** Automatically scans top 30 liquid stocks in the US or Malaysia to find daily Buy/Watch signals.
+    - **My Portfolio:** Track your existing stocks by appending `@price` to your ticker (e.g. `SUNCON@2.50`). The app will tell you when to Hold, Take Profit, or Cut Loss.
+
+    ### 2. Status Legend
+    - 🟢 **BUY SIGNAL**: All criteria met for a new entry (Trend is up, volume surge, breakout).
+    - 🟡 **WATCH (Consolidating)**: Stock is pulling back to support, waiting for breakout.
+    - 🟡 **HOLD**: For stocks you already own; trend is still intact.
+    - 🔴 **SELL SIGNAL**: Trend is broken or the stock hit your Cut Loss (CL) level.
+    - 🟢 **TAKE PROFIT**: Stock has reached your Take Profit (TP) target.
+    - ⚪ **NO SIGNAL / IN TREND**: No actionable setup right now.
+
+    ### 3. What is the 1:1.5 RR Target?
+    **RR (Risk-Reward Ratio / 盈亏比)** is the core of Jack Investment's money management. 
+    > *"每笔交易至少要具备 1.5 倍以上的盈亏比——如果亏的话会亏 100 块，那你就要确保赚的时候会赚到至少 150 块。"*
+    - **Risk:** Entry Price - Cut Loss
+    - **Reward:** Risk * 1.5
+    - **TP Target:** Entry + Reward. When hit, sell 50-70% to lock in profit.
+
+    ### 4. Strategy Logic & Formulas
+    *   **EMA30 (30-Day EMA):** Used as the "Lifeline" for short-term trends.
+    *   **High20 / Low20:** Defines the Breakout level and the Consolidation Box support.
+    *   **Jack Investment Buy Criteria:** Uptrend (Close > EMA30) + Consolidation (Box size < 20%) + Breakout (Close > High20) + Volume Surge (Vol > 1.2x 20d Avg) + Strong Close (Close in upper half of candle).
+    *   **Jack's Technical Score (/5):** +2 for Uptrend, +1 for Vol Surge, +1 for Consolidation, +1 for Breakout.
+    *   **Turtle Trading Buy Criteria:** Breakout (Close > High20). Exit when Close < Low10.
+    """)
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_data(ticker):
+    df = yf.download(ticker, period="1y", interval="1d", progress=False)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.droplevel(1)
+    return df
 
 def calculate_indicators(df):
     if len(df) < 55:
         return df
-
-    # Moving Averages
     df['EMA30'] = df['Close'].ewm(span=30, adjust=False).mean()
-    df['SMA50'] = df['Close'].rolling(window=50).mean()
-    df['SMA200'] = df['Close'].rolling(window=200).mean()
-
-    # Donchian Channels (20 and 10 days)
     df['High20'] = df['High'].shift(1).rolling(window=20).max()
     df['Low20'] = df['Low'].shift(1).rolling(window=20).min()
     df['Low10'] = df['Low'].shift(1).rolling(window=10).min()
-
-    # Volume Average
     df['Vol20'] = df['Volume'].shift(1).rolling(window=20).mean()
-
-    # Average True Range (ATR)
     df['PrevClose'] = df['Close'].shift(1)
     df['TR'] = df[['High', 'PrevClose']].max(axis=1) - df[['Low', 'PrevClose']].min(axis=1)
     df['ATR20'] = df['TR'].rolling(window=20).mean()
-
     return df
 
 def analyze_jack_investment(df, latest, custom_entry=None):
     trend_up = latest['Close'] > latest['EMA30']
-    
-    # Box structure check
     box_size = (latest['High20'] - latest['Low20']) / latest['Low20']
-    is_consolidating = box_size < 0.20 # 20% box tolerance
-    
-    # Breakout: Close > High20
+    is_consolidating = box_size < 0.20
     is_breakout = latest['Close'] > latest['High20']
-    
-    # Volume Surge: Volume > 1.2 * Vol20
     vol_surge = latest['Volume'] > (1.2 * latest['Vol20'])
-    
-    # Candle upper half
     upper_half = latest['Close'] > ((latest['High'] + latest['Low']) / 2)
+    cl = latest['Low20'] * 0.98
     
-    cl = latest['Low20'] * 0.98 # Support minus 2% buffer
-    
+    score = 0
+    if trend_up: score += 2
+    if vol_surge: score += 1
+    if is_consolidating: score += 1
+    if is_breakout: score += 1
+
     if custom_entry is not None:
         entry = custom_entry
         tp = entry + abs(entry - cl) * 1.5
-        
         reasons = [f"Bought at {entry:.2f}"]
         if latest['Close'] < cl:
             status = "SELL SIGNAL"
@@ -66,16 +93,13 @@ def analyze_jack_investment(df, latest, custom_entry=None):
             reasons.append("Trend intact")
     else:
         entry = latest['Close']
-        tp = entry + abs(entry - cl) * 1.5 # 1:1.5 Risk-Reward
-        
+        tp = entry + abs(entry - cl) * 1.5
         signal = trend_up and is_consolidating and is_breakout and vol_surge and upper_half
-        
         reasons = []
         if trend_up: reasons.append("Uptrend")
         if is_consolidating: reasons.append("Consolidating")
         if is_breakout: reasons.append("Breakout")
         if vol_surge: reasons.append("Vol Surge")
-        
         if signal:
             status = "BUY SIGNAL"
         elif is_consolidating and trend_up:
@@ -85,9 +109,10 @@ def analyze_jack_investment(df, latest, custom_entry=None):
         
     return {
         "Status": status,
-        "Entry Price": f"{entry:.2f}",
-        "Cut Loss (CL)": f"{cl:.2f}",
-        "Take Profit (TP)": f"{tp:.2f} (1:1.5 RR)",
+        "Score": f"{score}/5",
+        "Entry Price": entry,
+        "Cut Loss (CL)": cl,
+        "Take Profit (TP)": tp,
         "TA Summary": ", ".join(reasons) if reasons else "No clear pattern"
     }
 
@@ -99,7 +124,6 @@ def analyze_turtle_trading(df, latest, custom_entry=None):
     if custom_entry is not None:
         entry = custom_entry
         cl = entry - (2 * atr)
-        
         reasons = [f"Bought at {entry:.2f}"]
         if latest['Close'] < trailing_exit:
             status = "SELL SIGNAL"
@@ -113,90 +137,25 @@ def analyze_turtle_trading(df, latest, custom_entry=None):
     else:
         entry = latest['Close']
         cl = entry - (2 * atr)
-        
         if is_breakout:
             status = "BUY SIGNAL"
         elif latest['Close'] > latest['Low10']:
             status = "IN TREND"
         else:
             status = "NO SIGNAL"
-            
         reasons = [f"Current ATR: {atr:.2f}"]
         if is_breakout: reasons.append("20-Day Breakout!")
         
     return {
         "Status": status,
-        "Entry Price": f"{entry:.2f}",
-        "Cut Loss (CL)": f"{cl:.2f} (2 ATR)",
-        "Take Profit (TP)": f"Trailing Exit < {trailing_exit:.2f}",
+        "Score": "N/A",
+        "Entry Price": entry,
+        "Cut Loss (CL)": cl,
+        "Take Profit (TP)": trailing_exit,
         "TA Summary": ", ".join(reasons) if reasons else ""
     }
 
-st.set_page_config(page_title="Stock Screener (Jack & Turtle)", layout="wide")
-st.title("📈 Stock Screener: Jack Investment & Turtle Trading")
-
-with st.expander("ℹ️ Status Legend (Click to expand)"):
-    st.markdown("""
-    - 🟢 **BUY SIGNAL**: All criteria met for a new entry (Trend is up, volume surge, breakout).
-    - 🟡 **WATCH (Consolidating)**: Stock is pulling back to support, waiting for breakout.
-    - 🟡 **HOLD**: For stocks you already own; trend is still intact.
-    - 🔴 **SELL SIGNAL**: Trend is broken or the stock hit your Cut Loss (CL) level.
-    - 🟢 **TAKE PROFIT**: Stock has reached your Take Profit (TP) target.
-    - ⚪ **NO SIGNAL / IN TREND**: No actionable setup right now.
-    """)
-
-with st.expander("📖 什么是 1:1.5 RR Target？ (What does RR Target mean?)"):
-    st.markdown("""
-    **RR (Risk-Reward Ratio / 盈亏比)** 是交易中最核心的资金管理概念之一。当你在状态栏看到 **"Reached 1:1.5 RR Target"** 时，代表这支股票的当前价格，已经达到了预设的 1.5 倍获利目标，系统提示你应该 **TAKE PROFIT (主动止盈)**。
-
-    ### 📘 摘自《Jack Investment》第17章（资金与仓位管理）：
-    > *"我个人通常建议，每笔交易至少要具备 1.5 倍以上的盈亏比——如果亏的话会亏 100 块，那你就要确保赚的时候会赚到至少 150 块。在这样的盈亏结构下，一笔 1.5 : 1 的交易，你只需要约 40% 的胜率，就能达到长期不亏不赚的损益平衡点。"*
-
-    **App 是如何计算的？**
-    1. **Risk (风险/潜在亏损)** = `Entry Price (你的买入价)` - `Cut Loss (止损支撑位)`
-    2. **Reward (回报/盈利目标)** = `Risk × 1.5`
-    3. **TP Target (止盈目标价)** = `Entry Price` + `Reward`
-
-    一旦股价达到这个 **TP Target**，就意味着你已经赚取了冒着风险换来的 1.5 倍回报。根据 Jack 的策略，此时你应该选择卖出 50%-70% 的持股来锁定利润 (Lock in profit)，剩余的持股则可以继续放着，通过移动止盈 (Trailing Stop) 去捕捉更大的涨幅！
-    """)
-
-with st.expander("🧠 Strategy Logic & Formulas (How the App Works)"):
-    st.markdown("""
-    To give you full transparency and confidence, here are the exact formulas and rules the app uses under the hood:
-
-    ### 1. Common Technical Indicators
-    *   **EMA30 (30-Day Exponential Moving Average):** Used as the "Lifeline" (生命线) for short-term trends.
-    *   **High20 / Low20:** The highest High and lowest Low of the previous 20 trading days. Used for Breakouts and defining the Consolidation Box (箱体).
-    *   **Vol20 (20-Day Average Volume):** The average trading volume over the last 20 days.
-    *   **ATR20 (20-Day Average True Range):** Measures market volatility.
-
-    ---
-    ### 2. Jack Investment Strategy
-    Based on the "Trend + Consolidation + Breakout" philosophy.
-
-    **Buy Signal Criteria (All must be TRUE):**
-    1.  **Uptrend:** Current Close > EMA30.
-    2.  **Consolidation (箱体整理):** The 20-day box size `(High20 - Low20) / Low20` must be less than 20% (indicating tight consolidation).
-    3.  **Breakout:** Current Close > High20 (Price breaks the top of the box).
-    4.  **Volume Surge:** Current Volume > 1.2 × Vol20 (Volume is 20% higher than the 20-day average).
-    5.  **Strong Close:** Current Close is in the upper half of today's candle: `Close > (High + Low) / 2`.
-
-    **Risk Management:**
-    *   **Cut Loss (CL):** `Low20 × 0.98` (The bottom of the 20-day consolidation box, minus a 2% safety buffer to avoid false breakdowns).
-    *   **Take Profit (TP):** `Entry Price + (Entry Price - CL) × 1.5` (Strict 1:1.5 Risk-Reward ratio).
-
-    ---
-    ### 3. Turtle Trading Strategy (System 1)
-    Based on the classic Turtle trend-following rules.
-
-    **Buy Signal Criteria:**
-    1.  **Breakout:** Current Close > High20.
-
-    **Risk Management:**
-    *   **Cut Loss (CL):** `Entry Price - (2 × ATR20)` (Stop loss based on market volatility, not fixed percentages).
-    *   **Take Profit (TP):** Exit when `Current Close < Low10` (A 10-day trailing stop to ride the trend as long as possible).
-    """)
-
+@st.cache_data(ttl=86400, show_spinner=False)
 def resolve_ticker(query, market):
     try:
         url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}&quotesCount=3&newsCount=0"
@@ -217,19 +176,20 @@ def resolve_ticker(query, market):
         pass
     return query, query
 
-def color_status(val):
-    if val == 'BUY SIGNAL' or val == 'TAKE PROFIT':
-        color = 'green'
-    elif val.startswith('WATCH') or val == 'IN TREND' or val == 'HOLD':
-        color = 'orange'
-    elif val.startswith('SELL SIGNAL'):
-        color = 'red'
-    else:
-        color = 'gray'
-    return f'color: {color}'
-
-import json
-import os
+def plot_interactive_chart(df, ticker_name, entry, tp, cl):
+    df_plot = df.tail(90) # Last 90 days for better view
+    fig = go.Figure(data=[go.Candlestick(x=df_plot.index, open=df_plot['Open'], high=df_plot['High'], low=df_plot['Low'], close=df_plot['Close'], name='Price')])
+    fig.add_trace(go.Scatter(x=df_plot.index, y=df_plot['EMA30'], mode='lines', name='EMA30', line=dict(color='orange', width=1.5)))
+    fig.add_trace(go.Scatter(x=df_plot.index, y=df_plot['High20'], mode='lines', name='High20 (Resistance)', line=dict(color='blue', width=1, dash='dash')))
+    fig.add_trace(go.Scatter(x=df_plot.index, y=df_plot['Low20'], mode='lines', name='Low20 (Support)', line=dict(color='purple', width=1, dash='dash')))
+    
+    # Add Entry, TP, CL horizontal lines
+    fig.add_hline(y=entry, line_dash="solid", line_color="blue", annotation_text=f"Entry: {entry:.2f}")
+    fig.add_hline(y=tp, line_dash="solid", line_color="green", annotation_text=f"TP: {tp:.2f}")
+    fig.add_hline(y=cl, line_dash="solid", line_color="red", annotation_text=f"CL: {cl:.2f}")
+    
+    fig.update_layout(title=f"Chart for {ticker_name}", xaxis_rangeslider_visible=False, template='plotly_white', margin=dict(t=40, b=40, l=40, r=40), height=400)
+    return fig
 
 def load_portfolio():
     if os.path.exists("portfolio.json"):
@@ -246,13 +206,16 @@ def save_portfolio(data):
 
 portfolio_data = load_portfolio()
 
-# Tabs for different modes
+def color_status(val):
+    if val == 'BUY SIGNAL' or val == 'TAKE PROFIT': return 'color: green'
+    elif val.startswith('WATCH') or val == 'IN TREND' or val == 'HOLD': return 'color: orange'
+    elif val.startswith('SELL SIGNAL'): return 'color: red'
+    return 'color: gray'
+
 tab1, tab2 = st.tabs(["🎯 Discovery Scanner (Find New Buys)", "💼 My Portfolio (Check Holds/Sells)"])
 
 with tab1:
     st.markdown("### Market Discovery Scanner")
-    st.markdown("Scan top blue-chip and high-volume stocks automatically to find fresh **BUY** setups for today.")
-    
     scan_market = st.selectbox("Select Market to Scan", ["Malaysia Top 30 (KLCI)", "US Tech Mega-Caps"])
     scan_strategy = st.selectbox("Strategy to Use", ["Jack Investment", "Turtle Trading (System 1)"], key="scan_strat")
     
@@ -261,60 +224,53 @@ with tab1:
     
     if st.button("🚀 Run Full Market Scan"):
         scan_tickers = my_top_30 if "Malaysia" in scan_market else us_top_30
-        
-        results = []
+        results, charts_data = [], {}
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         for i, ticker in enumerate(scan_tickers):
             status_text.text(f"Scanning {ticker}... ({i+1}/{len(scan_tickers)})")
             try:
-                df = yf.download(ticker, period="1y", interval="1d", progress=False)
-                if isinstance(df.columns, pd.MultiIndex):
-                    df.columns = df.columns.droplevel(1)
-                if len(df) < 55:
-                    continue
-                    
+                df = fetch_data(ticker)
+                if len(df) < 55: continue
                 df = calculate_indicators(df)
                 latest = df.iloc[-1]
+                res = analyze_jack_investment(df, latest) if scan_strategy == "Jack Investment" else analyze_turtle_trading(df, latest)
                 
-                if scan_strategy == "Jack Investment":
-                    res = analyze_jack_investment(df, latest, None)
-                else:
-                    res = analyze_turtle_trading(df, latest, None)
-                
-                # ONLY keep actionable ideas
                 if res['Status'] in ["BUY SIGNAL", "WATCH (Consolidating)"]:
-                    # Fetch shortname
-                    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker}&quotesCount=1&newsCount=0"
-                    r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=3)
-                    shortname = r.json()['quotes'][0].get('shortname', ticker) if r.json().get('quotes') else ticker
+                    ticker_sym, shortname = resolve_ticker(ticker, "Malaysia Stocks" if "Malaysia" in scan_market else "US Stocks")
+                    res['Stock'] = f"{shortname} ({ticker_sym})"
+                    charts_data[res['Stock']] = (df, res['Entry Price'], res['Take Profit (TP)'], res['Cut Loss (CL)'])
                     
-                    res['Stock'] = f"{shortname} ({ticker})"
+                    res['Entry Price'] = f"{res['Entry Price']:.2f}"
+                    res['Cut Loss (CL)'] = f"{res['Cut Loss (CL)']:.2f}"
+                    res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
                     results.append(res)
-                    
-            except Exception:
-                pass
-                
+            except Exception: pass
             progress_bar.progress((i + 1) / len(scan_tickers))
             
         status_text.text("Scan complete!")
         if results:
-            results_df = pd.DataFrame(results)
-            cols = ['Stock', 'Status', 'Entry Price', 'Cut Loss (CL)', 'Take Profit (TP)', 'TA Summary']
-            results_df = results_df[cols]
+            results_df = pd.DataFrame(results)[['Stock', 'Score', 'Status', 'Entry Price', 'Cut Loss (CL)', 'Take Profit (TP)', 'TA Summary']]
             st.success(f"Found {len(results)} potential setups today!")
+            
+            # Export to CSV
+            csv = results_df.to_csv(index=False).encode('utf-8')
+            st.download_button(label="📥 Download CSV", data=csv, file_name="screener_results.csv", mime="text/csv")
+            
             st.dataframe(results_df.style.map(color_status, subset=['Status']))
+            
+            st.markdown("### 📊 Interactive Charts")
+            for stock, (df, entry, tp, cl) in charts_data.items():
+                with st.expander(f"View Chart: {stock}"):
+                    st.plotly_chart(plot_interactive_chart(df, stock, entry, tp, cl), use_container_width=True)
         else:
-            st.info("No BUY or WATCH signals found in the top 30 stocks today. The market might be weak or overextended.")
+            st.info("No BUY or WATCH signals found today. The market might be weak or overextended.")
 
 with tab2:
     st.markdown("### Manual / Portfolio Tracker")
-    st.markdown("Manually check specific stocks. **Tip:** Append `@price` to track stocks you already own (e.g. `SUNCON@2.50`)")
-    
     market = st.radio("Select Market", ["US Stocks", "Malaysia Stocks"], key="port_market")
-    
-    tickers_input = st.text_area("Your Saved Tickers (comma separated)", portfolio_data[market])
+    tickers_input = st.text_area("Your Saved Tickers (comma separated, use @price for entry)", portfolio_data[market])
     
     col1, col2 = st.columns([1, 4])
     with col1:
@@ -322,61 +278,51 @@ with tab2:
             portfolio_data[market] = tickers_input
             save_portfolio(portfolio_data)
             st.success("Saved!")
-    
+            
     strategy = st.selectbox("Select Strategy", ["Jack Investment", "Turtle Trading (System 1)"], key="port_strat")
 
-    if st.button("🔍 Check Portfolio / Tickers"):
+    if st.button("🔍 Check Portfolio"):
         raw_inputs = [t.strip() for t in tickers_input.split(",") if t.strip()]
         parsed_items = []
-        
         with st.spinner("Resolving stock names..."):
             for t in raw_inputs:
                 if "@" in t:
                     parts = t.split("@")
-                    name_query = parts[0].strip()
                     try:
-                        price = float(parts[1].strip())
-                    except:
-                        price = None
-                    ticker, shortname = resolve_ticker(name_query, market)
-                    parsed_items.append((ticker, shortname, price))
+                        parsed_items.append((resolve_ticker(parts[0].strip(), market), float(parts[1].strip())))
+                    except: pass
                 else:
-                    ticker, shortname = resolve_ticker(t, market)
-                    parsed_items.append((ticker, shortname, None))
+                    parsed_items.append((resolve_ticker(t, market), None))
                 
-        results = []
+        results, charts_data = [], {}
         progress_bar = st.progress(0)
         
-        for i, item in enumerate(parsed_items):
-            ticker, shortname, custom_entry = item
+        for i, ((ticker, shortname), custom_entry) in enumerate(parsed_items):
             try:
-                df = yf.download(ticker, period="1y", interval="1d", progress=False)
-                if isinstance(df.columns, pd.MultiIndex):
-                    df.columns = df.columns.droplevel(1)
-                if len(df) < 55:
-                    st.warning(f"Not enough data for {shortname} ({ticker})")
-                    continue
-                    
+                df = fetch_data(ticker)
+                if len(df) < 55: continue
                 df = calculate_indicators(df)
                 latest = df.iloc[-1]
                 
-                if strategy == "Jack Investment":
-                    res = analyze_jack_investment(df, latest, custom_entry)
-                else:
-                    res = analyze_turtle_trading(df, latest, custom_entry)
-                    
+                res = analyze_jack_investment(df, latest, custom_entry) if strategy == "Jack Investment" else analyze_turtle_trading(df, latest, custom_entry)
                 res['Stock'] = f"{shortname} ({ticker})"
+                charts_data[res['Stock']] = (df, res['Entry Price'], res['Take Profit (TP)'], res['Cut Loss (CL)'])
+                
+                res['Entry Price'] = f"{res['Entry Price']:.2f}"
+                res['Cut Loss (CL)'] = f"{res['Cut Loss (CL)']:.2f}"
+                res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
                 results.append(res)
-                
             except Exception as e:
-                st.error(f"Error processing {shortname} ({ticker}): {e}")
-                
+                st.error(f"Error processing {shortname}: {e}")
             progress_bar.progress((i + 1) / len(parsed_items))
             
         if results:
-            results_df = pd.DataFrame(results)
-            cols = ['Stock', 'Status', 'Entry Price', 'Cut Loss (CL)', 'Take Profit (TP)', 'TA Summary']
-            results_df = results_df[cols]
+            results_df = pd.DataFrame(results)[['Stock', 'Score', 'Status', 'Entry Price', 'Cut Loss (CL)', 'Take Profit (TP)', 'TA Summary']]
             st.dataframe(results_df.style.map(color_status, subset=['Status']))
+            
+            st.markdown("### 📊 Interactive Charts")
+            for stock, (df, entry, tp, cl) in charts_data.items():
+                with st.expander(f"View Chart: {stock}"):
+                    st.plotly_chart(plot_interactive_chart(df, stock, entry, tp, cl), use_container_width=True)
         else:
             st.info("No results found.")
