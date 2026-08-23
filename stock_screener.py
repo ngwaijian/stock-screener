@@ -42,7 +42,9 @@ with st.expander("📚 App Tutorials & Strategy Explanations (Click to expand)")
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_data(ticker):
-    df = yf.download(ticker, period="1y", interval="1d", progress=False)
+    session = requests.Session()
+    session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
+    df = yf.download(ticker, period="1y", interval="1d", progress=False, session=session)
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.droplevel(1)
     return df
