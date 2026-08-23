@@ -232,7 +232,9 @@ with tab1:
             status_text.text(f"Scanning {ticker}... ({i+1}/{len(scan_tickers)})")
             try:
                 df = fetch_data(ticker)
-                if len(df) < 55: continue
+                if len(df) < 55: 
+                    st.warning(f"Not enough data for {ticker}. Yahoo Finance might be blocking the Cloud server.")
+                    continue
                 df = calculate_indicators(df)
                 latest = df.iloc[-1]
                 res = analyze_jack_investment(df, latest) if scan_strategy == "Jack Investment" else analyze_turtle_trading(df, latest)
@@ -290,7 +292,8 @@ with tab2:
                     parts = t.split("@")
                     try:
                         parsed_items.append((resolve_ticker(parts[0].strip(), market), float(parts[1].strip())))
-                    except: pass
+                    except Exception as e: 
+                        st.error(f"Error parsing price for {t}: {e}")
                 else:
                     parsed_items.append((resolve_ticker(t, market), None))
                 
@@ -300,7 +303,9 @@ with tab2:
         for i, ((ticker, shortname), custom_entry) in enumerate(parsed_items):
             try:
                 df = fetch_data(ticker)
-                if len(df) < 55: continue
+                if len(df) < 55: 
+                    st.warning(f"Not enough data for {shortname} ({ticker}). Yahoo Finance might be blocking this Cloud server IP.")
+                    continue
                 df = calculate_indicators(df)
                 latest = df.iloc[-1]
                 
