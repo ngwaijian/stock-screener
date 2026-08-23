@@ -1,0 +1,187 @@
+Collecting streamlit
+  Downloading streamlit-1.62.0-py3-none-any.whl.metadata (10 kB)
+Collecting yfinance
+  Downloading yfinance-1.6.0-py3-none-any.whl.metadata (6.7 kB)
+Collecting pandas
+  Downloading pandas-3.0.5-cp314-cp314-win_amd64.whl.metadata (19 kB)
+Collecting altair!=5.4.0,!=5.4.1,<7,>=5.0.0 (from streamlit)
+  Downloading altair-6.2.2-py3-none-any.whl.metadata (11 kB)
+Collecting blinker<2,>=1.5.0 (from streamlit)
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting click<9,>=7.0 (from streamlit)
+  Downloading click-8.4.2-py3-none-any.whl.metadata (2.6 kB)
+Collecting numpy<3,>=1.23 (from streamlit)
+  Downloading numpy-2.5.2-cp314-cp314-win_amd64.whl.metadata (6.6 kB)
+Collecting packaging>=20 (from streamlit)
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pillow<13,>=7.1.0 (from streamlit)
+  Downloading pillow-12.3.0-cp314-cp314-win_amd64.whl.metadata (9.3 kB)
+Collecting pydeck<1,>=0.8.0b4 (from streamlit)
+  Downloading pydeck-0.9.3-py2.py3-none-any.whl.metadata (4.2 kB)
+Collecting protobuf<8,>=5.26.1 (from streamlit)
+  Downloading protobuf-7.36.0-cp310-abi3-win_amd64.whl.metadata (595 bytes)
+Collecting pyarrow!=25.0.0,<26,>=7.0 (from streamlit)
+  Downloading pyarrow-25.0.1-cp314-cp314-win_amd64.whl.metadata (3.0 kB)
+Collecting requests<3,>=2.27 (from streamlit)
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting toml<2,>=0.10.1 (from streamlit)
+  Downloading toml-0.10.2-py2.py3-none-any.whl.metadata (7.1 kB)
+Collecting typing-extensions<5,>=4.10.0 (from streamlit)
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting starlette<2,>=0.46.0 (from streamlit)
+  Downloading starlette-1.6.0-py3-none-any.whl.metadata (6.4 kB)
+Collecting uvicorn<1,>=0.30.0 (from streamlit)
+  Downloading uvicorn-0.52.4-py3-none-any.whl.metadata (6.6 kB)
+Collecting httptools<1,>=0.6.3 (from streamlit)
+  Downloading httptools-0.8.0-cp314-cp314-win_amd64.whl.metadata (3.7 kB)
+Collecting anyio<5,>=4.0.0 (from streamlit)
+  Downloading anyio-4.14.2-py3-none-any.whl.metadata (4.6 kB)
+Collecting python-multipart<1,>=0.0.10 (from streamlit)
+  Downloading python_multipart-0.0.32-py3-none-any.whl.metadata (2.1 kB)
+Collecting websockets<17,>=12.0.0 (from streamlit)
+  Downloading websockets-16.1.1-cp314-cp314-win_amd64.whl.metadata (7.0 kB)
+Collecting itsdangerous<3,>=2.1.2 (from streamlit)
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting watchdog<7,>=2.1.5 (from streamlit)
+  Downloading watchdog-6.0.0-py3-none-win_amd64.whl.metadata (44 kB)
+Collecting python-dateutil>=2.8.2 (from pandas)
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting tzdata (from pandas)
+  Downloading tzdata-2026.3-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting jinja2 (from altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting jsonschema>=3.0 (from altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting narwhals>=2.4.0 (from altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading narwhals-2.25.0-py3-none-any.whl.metadata (15 kB)
+Collecting idna>=2.8 (from anyio<5,>=4.0.0->streamlit)
+  Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Collecting colorama (from click<9,>=7.0->streamlit)
+  Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Collecting charset_normalizer<4,>=2 (from requests<3,>=2.27->streamlit)
+  Downloading charset_normalizer-3.5.1-cp314-cp314-win_amd64.whl.metadata (46 kB)
+Collecting urllib3<3,>=1.26 (from requests<3,>=2.27->streamlit)
+  Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2023.5.7 (from requests<3,>=2.27->streamlit)
+  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting h11>=0.8 (from uvicorn<1,>=0.30.0->streamlit)
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting beautifulsoup4>=4.11.1 (from yfinance)
+  Downloading beautifulsoup4-4.15.0-py3-none-any.whl.metadata (3.8 kB)
+Collecting curl_cffi>=0.15 (from yfinance)
+  Downloading curl_cffi-0.16.1-cp310-abi3-win_amd64.whl.metadata (17 kB)
+Collecting lxml>=4.9.0 (from yfinance)
+  Downloading lxml-6.1.2-cp314-cp314-win_amd64.whl.metadata (3.4 kB)
+Collecting multitasking>=0.0.7 (from yfinance)
+  Downloading multitasking-0.0.13-py3-none-any.whl.metadata (16 kB)
+Collecting peewee>=3.16.2 (from yfinance)
+  Downloading peewee-4.3.0-py3-none-any.whl.metadata (10 kB)
+Collecting platformdirs>=2.0.0 (from yfinance)
+  Downloading platformdirs-4.11.3-py3-none-any.whl.metadata (5.5 kB)
+Collecting pytz>=2022.5 (from yfinance)
+  Downloading pytz-2026.3.post1-py2.py3-none-any.whl.metadata (22 kB)
+Collecting soupsieve>=1.6.1 (from beautifulsoup4>=4.11.1->yfinance)
+  Downloading soupsieve-2.9.2-py3-none-any.whl.metadata (4.6 kB)
+Collecting cffi>=2.0.0 (from curl_cffi>=0.15->yfinance)
+  Downloading cffi-2.1.1-cp314-cp314-win_amd64.whl.metadata (2.6 kB)
+Collecting pycparser (from cffi>=2.0.0->curl_cffi>=0.15->yfinance)
+  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading markupsafe-3.0.3-cp314-cp314-win_amd64.whl.metadata (2.8 kB)
+Collecting attrs>=22.2.0 (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit)
+  Downloading rpds_py-2026.6.3-cp314-cp314-win_amd64.whl.metadata (4.2 kB)
+Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas)
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Downloading streamlit-1.62.0-py3-none-any.whl (10.5 MB)
+   ---------------------------------------- 10.5/10.5 MB 28.0 MB/s  0:00:00
+Downloading pandas-3.0.5-cp314-cp314-win_amd64.whl (10.0 MB)
+   ---------------------------------------- 10.0/10.0 MB 31.3 MB/s  0:00:00
+Downloading altair-6.2.2-py3-none-any.whl (797 kB)
+   ---------------------------------------- 797.6/797.6 kB 27.3 MB/s  0:00:00
+Downloading anyio-4.14.2-py3-none-any.whl (125 kB)
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading click-8.4.2-py3-none-any.whl (119 kB)
+Downloading httptools-0.8.0-cp314-cp314-win_amd64.whl (92 kB)
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading numpy-2.5.2-cp314-cp314-win_amd64.whl (12.6 MB)
+   ---------------------------------------- 12.6/12.6 MB 39.5 MB/s  0:00:00
+Downloading pillow-12.3.0-cp314-cp314-win_amd64.whl (7.2 MB)
+   ---------------------------------------- 7.2/7.2 MB 43.3 MB/s  0:00:00
+Downloading protobuf-7.36.0-cp310-abi3-win_amd64.whl (453 kB)
+Downloading pyarrow-25.0.1-cp314-cp314-win_amd64.whl (28.6 MB)
+   ---------------------------------------- 28.6/28.6 MB 37.5 MB/s  0:00:00
+Downloading pydeck-0.9.3-py2.py3-none-any.whl (11.4 MB)
+   ---------------------------------------- 11.4/11.4 MB 29.9 MB/s  0:00:00
+Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading charset_normalizer-3.5.1-cp314-cp314-win_amd64.whl (204 kB)
+Downloading idna-3.19-py3-none-any.whl (68 kB)
+Downloading starlette-1.6.0-py3-none-any.whl (75 kB)
+Downloading toml-0.10.2-py2.py3-none-any.whl (16 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+Downloading watchdog-6.0.0-py3-none-win_amd64.whl (79 kB)
+Downloading websockets-16.1.1-cp314-cp314-win_amd64.whl (179 kB)
+Downloading yfinance-1.6.0-py3-none-any.whl (148 kB)
+Downloading beautifulsoup4-4.15.0-py3-none-any.whl (109 kB)
+Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Downloading curl_cffi-0.16.1-cp310-abi3-win_amd64.whl (2.0 MB)
+   ---------------------------------------- 2.0/2.0 MB 38.3 MB/s  0:00:00
+Downloading cffi-2.1.1-cp314-cp314-win_amd64.whl (187 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Downloading lxml-6.1.2-cp314-cp314-win_amd64.whl (4.1 MB)
+   ---------------------------------------- 4.1/4.1 MB 39.9 MB/s  0:00:00
+Downloading markupsafe-3.0.3-cp314-cp314-win_amd64.whl (15 kB)
+Downloading multitasking-0.0.13-py3-none-any.whl (16 kB)
+Downloading narwhals-2.25.0-py3-none-any.whl (467 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Downloading peewee-4.3.0-py3-none-any.whl (179 kB)
+Downloading platformdirs-4.11.3-py3-none-any.whl (23 kB)
+Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Downloading pytz-2026.3.post1-py2.py3-none-any.whl (508 kB)
+Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+Downloading rpds_py-2026.6.3-cp314-cp314-win_amd64.whl (220 kB)
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading soupsieve-2.9.2-py3-none-any.whl (37 kB)
+Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Downloading tzdata-2026.3-py2.py3-none-any.whl (348 kB)
+Installing collected packages: pytz, multitasking, websockets, watchdog, urllib3, tzdata, typing-extensions, toml, soupsieve, six, rpds-py, python-multipart, pycparser, pyarrow, protobuf, platformdirs, pillow, peewee, packaging, numpy, narwhals, MarkupSafe, lxml, itsdangerous, idna, httptools, h11, colorama, charset_normalizer, certifi, blinker, attrs, requests, referencing, python-dateutil, jinja2, click, cffi, beautifulsoup4, anyio, uvicorn, starlette, pydeck, pandas, jsonschema-specifications, curl_cffi, yfinance, jsonschema, altair, streamlit
+  WARNING: The script websockets.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script watchmedo.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script pwiz.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The scripts f2py.exe and numpy-config.exe are installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script idna.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script normalizer.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script cffi-gen-src.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script uvicorn.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script curl-cffi.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script jsonschema.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script streamlit.exe is installed in 'C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+
+Successfully installed MarkupSafe-3.0.3 altair-6.2.2 anyio-4.14.2 attrs-26.1.0 beautifulsoup4-4.15.0 blinker-1.9.0 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 click-8.4.2 colorama-0.4.6 curl_cffi-0.16.1 h11-0.16.0 httptools-0.8.0 idna-3.19 itsdangerous-2.2.0 jinja2-3.1.6 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 lxml-6.1.2 multitasking-0.0.13 narwhals-2.25.0 numpy-2.5.2 packaging-26.3 pandas-3.0.5 peewee-4.3.0 pillow-12.3.0 platformdirs-4.11.3 protobuf-7.36.0 pyarrow-25.0.1 pycparser-3.0 pydeck-0.9.3 python-dateutil-2.9.0.post0 python-multipart-0.0.32 pytz-2026.3.post1 referencing-0.37.0 requests-2.34.2 rpds-py-2026.6.3 six-1.17.0 soupsieve-2.9.2 starlette-1.6.0 streamlit-1.62.0 toml-0.10.2 typing-extensions-4.16.0 tzdata-2026.3 urllib3-2.7.0 uvicorn-0.52.4 watchdog-6.0.0 websockets-16.1.1 yfinance-1.6.0
+
+[notice] A new release of pip is available: 25.3 -> 26.2.1
+[notice] To update, run: C:\Users\wai_j\AppData\Local\Python\pythoncore-3.14-64\python.exe -m pip install --upgrade pip

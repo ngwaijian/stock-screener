@@ -1,0 +1,7 @@
+- [x] Create `stock_screener.py`
+  - [x] Implement UI with Streamlit
+  - [x] Implement data fetching with yfinance
+  - [x] Implement Jack Investment logic
+  - [x] Implement Turtle Trading logic
+  - [x] Display results in a table
+- [x] Run the Streamlit application

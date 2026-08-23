@@ -228,6 +228,24 @@ def color_status(val):
         color = 'gray'
     return f'color: {color}'
 
+import json
+import os
+
+def load_portfolio():
+    if os.path.exists("portfolio.json"):
+        try:
+            with open("portfolio.json", "r") as f:
+                return json.load(f)
+        except:
+            pass
+    return {"US Stocks": "AAPL, TSLA@200, PLTR", "Malaysia Stocks": "SUNCON@3.00, MAYBANK, TENAGA"}
+
+def save_portfolio(data):
+    with open("portfolio.json", "w") as f:
+        json.dump(data, f)
+
+portfolio_data = load_portfolio()
+
 # Tabs for different modes
 tab1, tab2 = st.tabs(["🎯 Discovery Scanner (Find New Buys)", "💼 My Portfolio (Check Holds/Sells)"])
 
@@ -295,9 +313,16 @@ with tab2:
     st.markdown("Manually check specific stocks. **Tip:** Append `@price` to track stocks you already own (e.g. `SUNCON@2.50`)")
     
     market = st.radio("Select Market", ["US Stocks", "Malaysia Stocks"], key="port_market")
-    default_my = "SUNCON@3.00, MAYBANK, TENAGA"
-    default_us = "AAPL, TSLA@200, PLTR"
-    tickers_input = st.text_area("Enter Tickers (comma separated)", default_us if "US" in market else default_my)
+    
+    tickers_input = st.text_area("Your Saved Tickers (comma separated)", portfolio_data[market])
+    
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        if st.button("💾 Save Portfolio"):
+            portfolio_data[market] = tickers_input
+            save_portfolio(portfolio_data)
+            st.success("Saved!")
+    
     strategy = st.selectbox("Select Strategy", ["Jack Investment", "Turtle Trading (System 1)"], key="port_strat")
 
     if st.button("🔍 Check Portfolio / Tickers"):
