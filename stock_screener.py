@@ -159,20 +159,38 @@ def analyze_turtle_trading(df, latest, custom_entry=None):
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def resolve_ticker(query, market):
+    query_upper = query.upper().strip()
+    
+    # Intercept common Malaysian stocks so users don't have to memorize 4-digit codes
+    if "Malaysia" in market:
+        COMMON_BURSA_MAP = {
+            "CIMB": "1023.KL", "CIMB.KL": "1023.KL",
+            "MAYBANK": "1155.KL", "MAYBANK.KL": "1155.KL",
+            "TENAGA": "5347.KL", "TENAGA.KL": "5347.KL",
+            "PBBANK": "1295.KL", "PBBANK.KL": "1295.KL",
+            "SUNCON": "5263.KL", "SUNCON.KL": "5263.KL",
+            "SUNWAY": "5211.KL", "SUNWAY.KL": "5211.KL",
+            "IHH": "5225.KL", "IHH.KL": "5225.KL",
+            "SIME": "4197.KL", "SIME.KL": "4197.KL",
+            "MAXIS": "6012.KL", "MAXIS.KL": "6012.KL",
+            "NESTLE": "4707.KL", "NESTLE.KL": "4707.KL",
+            "GENTING": "3182.KL", "GENTING.KL": "3182.KL",
+            "GENM": "4715.KL", "GENM.KL": "4715.KL"
+        }
+        if query_upper in COMMON_BURSA_MAP:
+            return COMMON_BURSA_MAP[query_upper], query_upper
+            
     try:
         url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}&quotesCount=3&newsCount=0"
         headers = {'User-Agent': 'Mozilla/5.0'}
         r = requests.get(url, headers=headers, timeout=5)
         data = r.json()
         if 'quotes' in data and len(data['quotes']) > 0:
-            if market == "Malaysia Stocks":
-                for q in data['quotes']:
-                    if q.get('exchange') == 'KLS' or q.get('symbol', '').endswith('.KL'):
-                        return q['symbol'], q.get('shortname', q['symbol'])
-            else:
-                for q in data['quotes']:
-                    if q.get('exchange') in ['NMS', 'NYQ', 'NCM', 'NGM']:
-                        return q['symbol'], q.get('shortname', q['symbol'])
+            for q in data['quotes']:
+                if "Malaysia" in market and (q.get('exchange') == 'KLS' or q.get('symbol', '').endswith('.KL')):
+                    return q['symbol'], q.get('shortname', q['symbol'])
+                elif "US" in market and q.get('exchange') in ['NMS', 'NYQ', 'NGM']:
+                    return q['symbol'], q.get('shortname', q['symbol'])
             return data['quotes'][0]['symbol'], data['quotes'][0].get('shortname', data['quotes'][0]['symbol'])
     except Exception:
         pass
