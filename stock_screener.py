@@ -221,8 +221,8 @@ def plot_interactive_chart(df, ticker_name, entry, tp, cl):
 
 def load_portfolio():
     default = {
-        "US Stocks": [{"Ticker": "AAPL", "Entry Price": 150.0, "Quantity": 10}, {"Ticker": "TSLA", "Entry Price": 200.0, "Quantity": 5}],
-        "Malaysia Stocks": [{"Ticker": "SUNCON", "Entry Price": 7.40, "Quantity": 1000}]
+        "US Stocks": [{"Ticker": "AAPL", "Entry Price": 150.0, "Quantity": 10.0}, {"Ticker": "TSLA", "Entry Price": 200.0, "Quantity": 5.0}],
+        "Malaysia Stocks": [{"Ticker": "SUNCON", "Entry Price": 7.40, "Quantity": 1000.0}]
     }
     if os.path.exists("portfolio.json"):
         try:
@@ -343,6 +343,10 @@ with tab2:
     
     st.write("Manage your portfolio below. Add your exact quantity to see Moomoo fee estimates & Net Profit.")
     df_port = pd.DataFrame(portfolio_data[market])
+    if 'Quantity' in df_port.columns:
+        df_port['Quantity'] = df_port['Quantity'].astype(float)
+    if 'Entry Price' in df_port.columns:
+        df_port['Entry Price'] = df_port['Entry Price'].astype(float)
     edited_df = st.data_editor(df_port, num_rows="dynamic", use_container_width=True)
     
     col1, col2 = st.columns([1, 4])
@@ -392,7 +396,7 @@ with tab2:
                     net_profit = net_value - total_cost
                     net_profit_pct = (net_profit / total_cost) * 100
                     
-                    res['Qty'] = int(qty)
+                    res['Qty'] = f"{qty:g}"
                     res['Cost (w/ Fees)'] = f"{total_cost:.2f}"
                     res['Net Profit'] = f"{net_profit:.2f} ({net_profit_pct:.2f}%)"
                 else:
