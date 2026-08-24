@@ -229,7 +229,7 @@ with tab1:
     scan_market = st.selectbox("Select Market to Scan", ["Malaysia Top 30 (KLCI)", "US Tech Mega-Caps"])
     scan_strategy = st.selectbox("Strategy to Use", ["Jack Investment", "Turtle Trading (System 1)"], key="scan_strat")
     
-    my_top_30 = ["MAYBANK.KL", "TENAGA.KL", "PBBANK.KL", "CIMB.KL", "PMETAL.KL", "YTL.KL", "YTLPOWR.KL", "DIALOG.KL", "IHH.KL", "CELCOMDIGI.KL", "TM.KL", "MRDIY.KL", "PETGAS.KL", "SIME.KL", "MISC.KL", "KLK.KL", "IOICORP.KL", "PPB.KL", "NESTLE.KL", "MAXIS.KL", "INARI.KL", "GENTING.KL", "GENM.KL", "AMBANK.KL", "RHBBANK.KL", "HLIB.KL", "CDB.KL", "SUNWAY.KL", "GAMUDA.KL"]
+    my_top_30 = ["1155.KL", "5347.KL", "1295.KL", "1023.KL", "8869.KL", "4715.KL", "3182.KL", "4197.KL", "6012.KL", "6888.KL", "4707.KL", "5225.KL", "6947.KL", "4863.KL", "5296.KL", "6033.KL", "3816.KL", "2445.KL", "1961.KL", "4065.KL", "0166.KL", "1015.KL", "1066.KL", "5819.KL", "2836.KL", "5211.KL", "5398.KL", "7277.KL", "4677.KL", "6742.KL"]
     us_top_30 = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "BRK-B", "TSM", "LLY", "V", "JPM", "UNH", "XOM", "MA", "JNJ", "PG", "HD", "COST", "ABBV", "MRK", "PEP", "CRM", "KO", "WMT", "NFLX", "BAC", "AMD", "PLTR"]
     
     if st.button("🚀 Run Full Market Scan"):
