@@ -252,11 +252,18 @@ with tab1:
                 if res['Status'] in ["BUY SIGNAL", "WATCH (Consolidating)"]:
                     ticker_sym, shortname = resolve_ticker(ticker, "Malaysia Stocks" if "Malaysia" in scan_market else "US Stocks")
                     res['Stock'] = f"{shortname} ({ticker_sym})"
+                    
+                    # Store raw floats for plotting
                     charts_data[res['Stock']] = (df, res['Entry Price'], res['Take Profit (TP)'], res['Cut Loss (CL)'])
                     
+                    # Format strings for the table
                     res['Entry Price'] = f"{res['Entry Price']:.2f}"
                     res['Cut Loss (CL)'] = f"{res['Cut Loss (CL)']:.2f}"
-                    res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
+                    if scan_strategy == "Turtle Trading (System 1)":
+                        res['Take Profit (TP)'] = f"Trailing (< {res['Take Profit (TP)']:.2f})"
+                    else:
+                        res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
+                        
                     results.append(res)
             except Exception: pass
             progress_bar.progress((i + 1) / len(scan_tickers))
@@ -321,11 +328,18 @@ with tab2:
                 
                 res = analyze_jack_investment(df, latest, custom_entry) if strategy == "Jack Investment" else analyze_turtle_trading(df, latest, custom_entry)
                 res['Stock'] = f"{shortname} ({ticker})"
+                
+                # Store raw floats for plotting
                 charts_data[res['Stock']] = (df, res['Entry Price'], res['Take Profit (TP)'], res['Cut Loss (CL)'])
                 
+                # Format strings for the table
                 res['Entry Price'] = f"{res['Entry Price']:.2f}"
                 res['Cut Loss (CL)'] = f"{res['Cut Loss (CL)']:.2f}"
-                res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
+                if strategy == "Turtle Trading (System 1)":
+                    res['Take Profit (TP)'] = f"Trailing (< {res['Take Profit (TP)']:.2f})"
+                else:
+                    res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
+                    
                 results.append(res)
             except Exception as e:
                 st.error(f"Error processing {shortname}: {e}")
