@@ -40,7 +40,7 @@ with st.expander("📚 App Tutorials & Strategy Explanations (Click to expand)")
     *   **Turtle Trading Buy Criteria:** Breakout (Close > High20). Exit when Close < Low10.
     """)
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_data(ticker):
     session = requests.Session()
     session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
