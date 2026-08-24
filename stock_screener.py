@@ -202,17 +202,50 @@ def plot_interactive_chart(df, ticker_name, entry, tp, cl):
     return fig
 
 def load_portfolio():
+    default = {
+        "US Stocks": [{"Ticker": "AAPL", "Entry Price": 150.0, "Quantity": 10}, {"Ticker": "TSLA", "Entry Price": 200.0, "Quantity": 5}],
+        "Malaysia Stocks": [{"Ticker": "SUNCON", "Entry Price": 7.40, "Quantity": 1000}]
+    }
     if os.path.exists("portfolio.json"):
         try:
             with open("portfolio.json", "r") as f:
-                return json.load(f)
+                data = json.load(f)
+            if isinstance(data.get("US Stocks", ""), str):
+                new_data = {"US Stocks": [], "Malaysia Stocks": []}
+                for mkt in ["US Stocks", "Malaysia Stocks"]:
+                    if mkt in data and isinstance(data[mkt], str):
+                        for item in data[mkt].split(','):
+                            item = item.strip()
+                            if not item: continue
+                            if "@" in item:
+                                parts = item.split("@")
+                                new_data[mkt].append({"Ticker": parts[0], "Entry Price": float(parts[1]), "Quantity": 100})
+                            else:
+                                new_data[mkt].append({"Ticker": item, "Entry Price": 0.0, "Quantity": 100})
+                return new_data
+            return data
         except:
             pass
-    return {"US Stocks": "AAPL, TSLA@200, PLTR", "Malaysia Stocks": "SUNCON@3.00, MAYBANK, TENAGA"}
+    return default
 
 def save_portfolio(data):
     with open("portfolio.json", "w") as f:
         json.dump(data, f)
+
+def calc_moomoo_fees(price, quantity, market):
+    gross_value = price * quantity
+    if "Malaysia" in market:
+        brokerage = max(3.00, gross_value * 0.0003)
+        platform = 3.00
+        clearing = min(1000.00, gross_value * 0.0003)
+        stamp_duty = min(200.00, max(1.00, int(gross_value / 1000) * 1.00))
+        sst = (brokerage + platform) * 0.08
+        return brokerage + platform + clearing + stamp_duty + sst
+    else:
+        commission = max(0.99, quantity * 0.0099)
+        platform = 0.99
+        settlement = quantity * 0.003
+        return commission + platform + settlement
 
 portfolio_data = load_portfolio()
 
@@ -289,35 +322,37 @@ with tab1:
 with tab2:
     st.markdown("### Manual / Portfolio Tracker")
     market = st.radio("Select Market", ["US Stocks", "Malaysia Stocks"], key="port_market")
-    tickers_input = st.text_area("Your Saved Tickers (comma separated, use @price for entry)", portfolio_data[market])
+    
+    st.write("Manage your portfolio below. Add your exact quantity to see Moomoo fee estimates & Net Profit.")
+    df_port = pd.DataFrame(portfolio_data[market])
+    edited_df = st.data_editor(df_port, num_rows="dynamic", use_container_width=True)
     
     col1, col2 = st.columns([1, 4])
     with col1:
         if st.button("💾 Save Portfolio"):
-            portfolio_data[market] = tickers_input
+            portfolio_data[market] = edited_df.to_dict('records')
             save_portfolio(portfolio_data)
             st.success("Saved!")
             
     strategy = st.selectbox("Select Strategy", ["Jack Investment", "Turtle Trading (System 1)"], key="port_strat")
 
     if st.button("🔍 Check Portfolio"):
-        raw_inputs = [t.strip() for t in tickers_input.split(",") if t.strip()]
         parsed_items = []
         with st.spinner("Resolving stock names..."):
-            for t in raw_inputs:
-                if "@" in t:
-                    parts = t.split("@")
-                    try:
-                        parsed_items.append((resolve_ticker(parts[0].strip(), market), float(parts[1].strip())))
-                    except Exception as e: 
-                        st.error(f"Error parsing price for {t}: {e}")
-                else:
-                    parsed_items.append((resolve_ticker(t, market), None))
+            for _, row in edited_df.iterrows():
+                ticker_raw = str(row.get('Ticker', '')).strip()
+                if not ticker_raw: continue
+                try:
+                    entry = float(row.get('Entry Price', 0.0))
+                    qty = float(row.get('Quantity', 0))
+                except:
+                    entry, qty = 0.0, 0.0
+                parsed_items.append((resolve_ticker(ticker_raw, market), entry if entry > 0 else None, qty))
                 
         results, charts_data = [], {}
         progress_bar = st.progress(0)
         
-        for i, ((ticker, shortname), custom_entry) in enumerate(parsed_items):
+        for i, ((ticker, shortname), custom_entry, qty) in enumerate(parsed_items):
             try:
                 df = fetch_data(ticker)
                 if len(df) < 55: 
@@ -329,16 +364,39 @@ with tab2:
                 res = analyze_jack_investment(df, latest, custom_entry) if strategy == "Jack Investment" else analyze_turtle_trading(df, latest, custom_entry)
                 res['Stock'] = f"{shortname} ({ticker})"
                 
+                current_price = latest['Close']
+                if custom_entry is not None and qty > 0:
+                    entry_fees = calc_moomoo_fees(custom_entry, qty, market)
+                    exit_fees = calc_moomoo_fees(current_price, qty, market)
+                    total_cost = (custom_entry * qty) + entry_fees
+                    gross_value = (current_price * qty)
+                    net_value = gross_value - exit_fees
+                    net_profit = net_value - total_cost
+                    net_profit_pct = (net_profit / total_cost) * 100
+                    
+                    res['Qty'] = int(qty)
+                    res['Cost (w/ Fees)'] = f"{total_cost:.2f}"
+                    res['Net Profit'] = f"{net_profit:.2f} ({net_profit_pct:.2f}%)"
+                else:
+                    res['Qty'] = "-"
+                    res['Cost (w/ Fees)'] = "-"
+                    res['Net Profit'] = "-"
+                
                 # Store raw floats for plotting
                 charts_data[res['Stock']] = (df, res['Entry Price'], res['Take Profit (TP)'], res['Cut Loss (CL)'])
                 
                 # Format strings for the table
-                res['Entry Price'] = f"{res['Entry Price']:.2f}"
-                res['Cut Loss (CL)'] = f"{res['Cut Loss (CL)']:.2f}"
+                res['Current'] = f"{current_price:.2f}"
+                res['Entry'] = f"{res['Entry Price']:.2f}"
+                res['Cut Loss'] = f"{res['Cut Loss (CL)']:.2f}"
                 if strategy == "Turtle Trading (System 1)":
-                    res['Take Profit (TP)'] = f"Trailing (< {res['Take Profit (TP)']:.2f})"
+                    res['Take Profit'] = f"Trailing (< {res['Take Profit (TP)']:.2f})"
                 else:
-                    res['Take Profit (TP)'] = f"{res['Take Profit (TP)']:.2f}"
+                    res['Take Profit'] = f"{res['Take Profit (TP)']:.2f}"
+                    
+                # Clean up old keys
+                for k in ['Entry Price', 'Cut Loss (CL)', 'Take Profit (TP)']:
+                    if k in res: del res[k]
                     
                 results.append(res)
             except Exception as e:
@@ -346,7 +404,7 @@ with tab2:
             progress_bar.progress((i + 1) / len(parsed_items))
             
         if results:
-            results_df = pd.DataFrame(results)[['Stock', 'Score', 'Status', 'Entry Price', 'Cut Loss (CL)', 'Take Profit (TP)', 'TA Summary']]
+            results_df = pd.DataFrame(results)[['Stock', 'Score', 'Status', 'Current', 'Entry', 'Qty', 'Cost (w/ Fees)', 'Net Profit', 'Cut Loss', 'Take Profit', 'TA Summary']]
             st.dataframe(results_df.style.map(color_status, subset=['Status']))
             
             st.markdown("### 📊 Interactive Charts")
