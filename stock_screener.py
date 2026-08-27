@@ -66,25 +66,18 @@ def analyze_jack_investment(df, latest, custom_entry=None):
     trend_up = latest['Close'] > latest['EMA30']
     box_size = (latest['High20'] - latest['Low20']) / latest['Low20']
     is_consolidating = box_size < 0.20
-    is_breakout = latest['Close'] > latest['High20']
-    vol_surge = latest['Volume'] > (1.2 * latest['Vol20'])
-    upper_half = latest['Close'] > ((latest['High'] + latest['Low']) / 2)
     cl = latest['Low20'] * 0.98
-    
-    score = 0
-    if trend_up: score += 2
-    if vol_surge: score += 1
-    if is_consolidating: score += 1
-    if is_breakout: score += 1
 
     if custom_entry is not None:
         entry = custom_entry
         tp = entry + abs(entry - cl) * 1.5
         reasons = [f"Bought at {entry:.2f}"]
+        
+        # Check Portfolio Conditions
         if latest['Close'] < cl:
-            status = "SELL SIGNAL"
+            status = "SELL SIGNAL / CUT LOSS"
             reasons.append("Hit Cut Loss (Support broken)")
-        elif not trend_up:
+        elif latest['Close'] < latest['EMA30']:
             status = "SELL SIGNAL"
             reasons.append("Trend broken (Below EMA30)")
         elif latest['Close'] >= tp:
@@ -93,29 +86,48 @@ def analyze_jack_investment(df, latest, custom_entry=None):
         else:
             status = "HOLD"
             reasons.append("Trend intact")
+            
+        score = "N/A"
     else:
         entry = latest['Close']
         tp = entry + abs(entry - cl) * 1.5
-        signal = trend_up and is_consolidating and is_breakout and vol_surge and upper_half
         reasons = []
-        if trend_up: reasons.append("Uptrend")
-        if is_consolidating: reasons.append("Consolidating")
-        if is_breakout: reasons.append("Breakout")
-        if vol_surge: reasons.append("Vol Surge")
-        if signal:
-            status = "BUY SIGNAL"
-        elif is_consolidating and trend_up:
-            status = "WATCH (Consolidating)"
-        else:
-            status = "NO SIGNAL"
         
+        # Check 8% Risk Rule for New Scans
+        risk_pct = (entry - cl) / entry
+        
+        uptrend = latest['Close'] > latest['EMA30']
+        vol_surge = latest['Volume'] > latest['Vol20'] * 1.2
+        consolidating = (latest['High20'] - latest['Low20']) / latest['Low20'] < 0.20
+        breakout = latest['Close'] >= latest['High20'] * 0.98
+
+        score_val = sum([uptrend, vol_surge, consolidating, breakout])
+        score = f"{score_val}/4"
+        
+        if score_val == 4:
+            if risk_pct > 0.08:
+                status = "REJECTED (Risk > 8%)"
+                reasons.append(f"Risk is {risk_pct*100:.1f}%, exceeds Jack's 8% limit")
+            else:
+                status = "BUY SIGNAL"
+                reasons.append("Perfect Jack Setup (Trend + Vol + Breakout)")
+        elif score_val == 3 and consolidating and uptrend:
+            status = "WATCH (Consolidating)"
+            reasons.append("Consolidating near highs, waiting for breakout")
+        elif uptrend:
+            status = "IN TREND"
+            reasons.append("Holding above EMA30")
+        else:
+            status = "WEAK"
+            reasons.append("Below EMA30")
+
     return {
+        "Score": score,
         "Status": status,
-        "Score": f"{score}/5",
         "Entry Price": entry,
         "Cut Loss (CL)": cl,
         "Take Profit (TP)": tp,
-        "TA Summary": ", ".join(reasons) if reasons else "No clear pattern"
+        "TA Summary": ", ".join(reasons) if reasons else "No clear signal"
     }
 
 def analyze_turtle_trading(df, latest, custom_entry=None):
