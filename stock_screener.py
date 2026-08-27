@@ -40,11 +40,38 @@ with st.expander("📚 App Tutorials & Strategy Explanations (Click to expand)")
     *   **Turtle Trading Buy Criteria:** Breakout (Close > High20). Exit when Close < Low10.
     """)
 
+import time
+import random
+
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15'
+]
+
 @st.cache_data(ttl=300, show_spinner=False)
-def fetch_data(ticker):
+def fetch_data(ticker, period="6mo"):
     session = requests.Session()
-    session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
-    df = yf.download(ticker, period="1y", interval="1d", progress=False, session=session)
+    session.headers.update({
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive'
+    })
+    
+    # Add a slight delay to avoid triggering rapid-fire rate limits
+    time.sleep(random.uniform(0.3, 1.0))
+    
+    df = yf.download(ticker, period=period, session=session, progress=False)
+    
+    # Retry once if it gets blocked/returns empty
+    if len(df) == 0:
+        time.sleep(random.uniform(1.5, 3.0))
+        session.headers.update({'User-Agent': random.choice(USER_AGENTS)})
+        df = yf.download(ticker, period=period, session=session, progress=False)
+        
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.droplevel(1)
     return df
